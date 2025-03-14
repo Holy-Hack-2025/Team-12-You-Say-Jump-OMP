@@ -2,6 +2,8 @@
 We implement an interactive dashboard that integrates with inventory management systems to optimize supplier selection by balancing sustainability, reliability, and price. By leveraging advanced optimization techniques, we help businesses reduce waste, ensure supply chain stability, and accelerate the shift towards a circular economy. Our approach minimizes costs while promoting responsible sourcing and long-term sustainability.
 ![image](https://github.com/user-attachments/assets/d3b3e39f-888c-4532-96d4-2808da3c80e0)
 
+
+
 ## Overview
 This script "Model_final" performs gradient descent optimization with Armijo backtracking on a rotated asymmetric convex function. The optimization process is visualized using an interactive 3D surface plot with Plotly.
 ![image](https://github.com/user-attachments/assets/28f9428b-b80f-40be-809d-9920b15a4956)
