@@ -46,6 +46,7 @@ A 3D surface plot is generated using Plotly with:
 - The **initial guess** marked in blue.
 - The **optimized minimum** marked in red.
 - The **optimization path** shown as a black line.
+![image](https://github.com/user-attachments/assets/28f9428b-b80f-40be-809d-9920b15a4956)
 
 ### Axes and Legend
 - The axes are labeled:
