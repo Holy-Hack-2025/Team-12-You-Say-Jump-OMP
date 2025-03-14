@@ -1,0 +1,248 @@
+---
+title: "Example Scenarios - Supply Chain"
+output: pdf_document
+date: "2025-03-14"
+---
+
+```{r}
+library(dplyr)
+```
+
+
+```{r}
+
+# market players
+supplier <- c("s-a", "s-b", "s-c", "s-d", "s-f")
+manufacturer <- c("m-a", "m-b", "m-c", "m-d", "m-f")
+transport <- c("t-a", "t-b", "t-c", "t-d", "t-f")
+
+```
+
+
+```{r}
+# means
+set.seed(1234)
+s_price_means <- runif(5, min = 30, max = 70)
+m_price_means <- runif(5, min = 30, max = 70)
+t_price_means <- runif(5, min = 30, max = 70)
+
+s_reliability_means <- runif(5, min = 30, max = 70)
+m_reliability_means <- runif(5, min = 30, max = 70)
+t_reliability_means <- runif(5, min = 30, max = 70)
+
+s_sustain_means <- runif(5, min = 30, max = 70)
+m_sustain_means <- runif(5, min = 30, max = 70)
+t_sustain_means <- runif(5, min = 30, max = 70)
+```
+
+```{r}
+# variability
+set.seed(1234)
+s_price_sd <- runif(5, min = 1, max = 15)
+m_price_sd <- runif(5, min = 1, max = 15)
+t_price_sd <- runif(5, min = 1, max = 15)
+
+s_reliability_sd <- runif(5, min = 1, max = 15)
+m_reliability_sd <- runif(5, min = 1, max = 15)
+t_reliability_sd <- runif(5, min = 1, max = 15)
+
+s_sustain_sd <- runif(5, min = 1, max = 15)
+m_sustain_sd <- runif(5, min = 1, max = 15)
+t_sustain_sd <- runif(5, min = 1, max = 15)
+```
+
+
+```{r}
+df <- data.frame(
+market_players = c(supplier, manufacturer, transport),
+
+price_means = c(s_price_means, m_price_means, t_price_means),
+price_sd = c(s_price_sd, m_price_sd, t_price_sd),
+
+reliablity_means = c(s_reliability_means, m_reliability_means, t_reliability_means),
+reliability_sd = c(s_reliability_sd, m_reliability_sd, t_reliability_sd),
+
+sustainability_means = c(s_sustain_means, m_sustain_means, t_sustain_means),
+sustainability_sd = c(s_sustain_sd, m_sustain_sd, t_sustain_sd)
+)
+```
+
+
+```{r}
+# Create a sequence of x values
+x <- seq(0, 100, 0.1)
+
+# Compute density values
+y <- dnorm(x, mean = df[1,2], sd = df[1,3])
+y2 <- dnorm(x, mean = df[2,2], sd = df[2,3])
+# Plot the density function
+plot(x, y, type = "l", col = "blue", lwd = 2,
+     main = "Price Density Function, Supplier A (Blue) and Supplier B (Red)",
+     xlab = "X", ylab = "Density")
+lines(x, y2, col='red', lwd=2)
+```
+
+```{r}
+df$total_means <- df$price_means + df$reliablity_means + df$reliablity_means
+df$total_sd <- df$price_sd + df$reliability_sd + df$sustainability_sd
+```
+
+
+```{r}
+# Create a sequence of x values
+x <- seq(50, 300, 0.1)
+
+# Compute density values
+y <- dnorm(x, mean = df[1,8], sd = df[1,9])
+y2 <- dnorm(x, mean = df[2,8], sd = df[2,9])
+# Plot the density function
+plot(x, y, type = "l", col = "blue", lwd = 2, ylim=c(0,0.02),
+     main = "Combined Function, Equal Weights -  Supplier A (Blue) and Supplier B (Red)",
+     xlab = "X", ylab = "Density")
+lines(x, y2, col='red', lwd=2)
+```
+
+
+# 1: OVERALL MARKET
+
+```{r}
+weights_s <- c(0.4, 0.4, 0.2) # price, reliability, sustainability
+weights_m <- c(0.5, 0.2, 0.3) # price, reliability, sustainability
+weights_t <- c(0.3, 0.5, 0.2) # price, reliability, sustainability
+
+combo <- c()
+score <- c()
+combo_means <- c()
+combo_sd <- c()
+
+suppliers <- df[1:5,]
+manufacturers <- df[6:10,]
+transport <- df[11:15,]
+
+for(i in 1:5){
+  for(j in 1:5){
+    for(k in 1:5){
+       supplier_total_means <- c(suppliers[i,2],suppliers[i,4],suppliers[i,6]) %*% weights_s
+       supplier_total_sd <- (c(suppliers[i,3]^2, suppliers[i,5]^2, suppliers[i,7]^2) %*% weights_s^2)^(1/2)
+       
+       manufacturer_total_means <- c(manufacturers[j,2],manufacturers[j,4],manufacturers[j,6]) %*% weights_m
+       manufacturer_total_sd <- (c(manufacturers[j,3]^2, manufacturers[j,5]^2, manufacturers[j,7]^2) %*% weights_m^2)^(1/2)
+       
+       transport_total_means <- c(transport[k,2],transport[k,4],transport[k,6]) %*% weights_t
+       transport_total_sd <- (c(transport[k,3]^2, transport[k,5]^2, transport[k,7]^2) %*% weights_t^2)^(1/2)
+       
+       means <- (supplier_total_means + manufacturer_total_means + transport_total_means)
+       sds <- c(supplier_total_sd^2 + manufacturer_total_sd^2 + transport_total_sd ^ 2)^(1/2)
+       
+       rv <- rnorm(1000, mean = means, sd = sds)
+        
+       combo <- c(combo, paste(i,j,k))
+       score <- c(score, mean(rv) + sd(rv)^2)
+       combo_means <- c(combo_means, means)
+       combo_sd <- c(combo_sd, sds)
+       
+    }}}  
+
+results <- data.frame(combo, score, combo_means, combo_sd)
+
+results %>% arrange(score)
+```
+
+
+```{r}
+results <- data.frame(combo, score, combo_means, combo_sd)
+
+results %>% arrange(score)
+```
+
+
+
+# 2: DATA ASYMMETRY MARKET
+
+```{r}
+weights_s <- c(0.4, 0.4, 0.2) # price, reliability, sustainability
+weights_m <- c(0.5, 0.2, 0.3) # price, reliability, sustainability
+weights_t <- c(0.3, 0.5, 0.2) # price, reliability, sustainability
+
+combo <- c()
+score <- c()
+combo_means <- c()
+combo_sd <- c()
+
+suppliers <- df[1:5,]
+manufacturers <- df[6:10,]
+transport <- df[11:15,]
+
+transport[5, 3] <- transport[5, 3] + 10
+transport[5,5] <- transport[5,5] + 10
+transport[5,7] <- transport[5,7] + 10
+
+
+for(i in 1:5){
+  for(j in 1:5){
+    for(k in 1:5){
+       supplier_total_means <- c(suppliers[i,2],suppliers[i,4],suppliers[i,6]) %*% weights_s
+       supplier_total_sd <- (c(suppliers[i,3]^2, suppliers[i,5]^2, suppliers[i,7]^2) %*% weights_s^2)^(1/2)
+       
+       manufacturer_total_means <- c(manufacturers[j,2],manufacturers[j,4],manufacturers[j,6]) %*% weights_m
+       manufacturer_total_sd <- (c(manufacturers[j,3]^2, manufacturers[j,5]^2, manufacturers[j,7]^2) %*% weights_m^2)^(1/2)
+       
+       transport_total_means <- c(transport[k,2],transport[k,4],transport[k,6]) %*% weights_t
+       transport_total_sd <- (c(transport[k,3]^2, transport[k,5]^2, transport[k,7]^2) %*% weights_t^2)^(1/2)
+       
+       means <- (supplier_total_means + manufacturer_total_means + transport_total_means)
+       sds <- c(supplier_total_sd^2 + manufacturer_total_sd^2 + transport_total_sd ^ 2)^(1/2)
+       
+       rv <- rnorm(1000, mean = means, sd = sds)
+        
+       combo <- c(combo, paste(i,j,k))
+       score <- c(score, mean(rv) + sd(rv)^2)
+       combo_means <- c(combo_means, means)
+       combo_sd <- c(combo_sd, sds)
+       
+}}}    
+```
+
+
+```{r}
+results <- data.frame(combo, score, combo_means, combo_sd)
+
+results %>% arrange(score)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
